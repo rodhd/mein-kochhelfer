@@ -2,11 +2,13 @@ import {
     Box,
     Button,
     Form,
-    FormField, Grid,
-    grommet,
+    FormField,
+    Grid,
     Layer,
     RadioButtonGroup,
-    RangeInput, Select,
+    Select,
+    Text,
+    TextArea,
     TextInput,
     ThemeContext
 } from "grommet";
@@ -14,8 +16,8 @@ import React, {useState} from "react";
 import {useRecoilValue, useSetRecoilState} from "recoil";
 import {getSelectedRecipeSelector} from "../state/getSelectedRecipeSelector";
 import {selectedRecipeState} from "../state/selectedRecipeState";
-import {deepMerge} from "grommet/utils";
-import {Unit} from "../api/generated";
+import {Ingredient, Recipe, Step, Unit} from "../api/generated";
+import {Add, Close} from "grommet-icons";
 
 const radioButtonTheme = {
     radioButton: {
@@ -43,40 +45,191 @@ const units = [
 ]
 
 
-const IngredientElement = ({value, amount, unit, disabled}: {value: string, amount: number, unit: any, disabled: boolean}) => {
-    return(
-        <Grid 
-            columns={['2/4', '1/4', '1/4']}
+const IngredientElement = ({
+                               value,
+                               setValue,
+                               amount,
+                               setAmount,
+                               unit,
+                               setUnit,
+                               onDelete,
+                               disabled
+                           }: {
+    value: string,
+    setValue: ((event: React.ChangeEvent<HTMLInputElement>) => void),
+    amount: number,
+    setAmount: ((event: React.ChangeEvent<HTMLInputElement>) => void)
+    unit: any,
+    setUnit: ((event: React.ChangeEvent<HTMLSelectElement>) => void),
+    onDelete: React.MouseEventHandler<HTMLButtonElement>,
+    disabled: boolean
+}) => {
+    return (
+        <Grid
+            columns={['2/4', 'auto', 'auto', 'auto']}
             rows={['auto']}
-            areas={[['name', 'amount', 'unit']]}
+            areas={[['name', 'amount', 'unit', 'delete']]}
             gap="xsmall"
             margin="xsmall"
         >
             <Box gridArea="name">
-                <TextInput placeholder="Name" value={value} disabled={disabled}/>
+                <TextInput placeholder="Name" onChange={setValue} value={value} disabled={disabled}/>
             </Box>
             <Box gridArea="amount">
-                <TextInput placeholder="Amount" value={amount} disabled={disabled}/>
+                <TextInput placeholder="Amount" onChange={setAmount} value={amount} disabled={disabled}/>
             </Box>
             <Box gridArea="unit">
                 <Select
-                placeholder="Unit"
-                labelKey="label"
-                valueKey={{key: "value", reduce: true}}
-                value={unit}
-                options={units}
-                disabled={disabled}
-            /></Box>
+                    placeholder="Unit"
+                    labelKey="label"
+                    valueKey={{key: "value", reduce: true}}
+                    value={unit}
+                    onChange={setUnit}
+                    options={units}
+                    disabled={disabled}
+                />
+            </Box>
+            {!disabled && <Box gridArea="delete">
+                <Button icon={<Close/>} onClick={onDelete} secondary/>
+            </Box>}
         </Grid>
-        
+
     );
 }
 
+
+const AuthorElement = ({
+                           firstName,
+                           setFirstName,
+                           lastName,
+                           setLastName,
+                           disabled
+                       }: {
+    firstName: string,
+    setFirstName: ((event: React.ChangeEvent<HTMLInputElement>) => void),
+    lastName: string,
+    setLastName: ((event: React.ChangeEvent<HTMLInputElement>) => void),
+    disabled: boolean
+}) => {
+    return (
+        <Grid
+            columns={{
+                count: 2,
+                size: 'auto',
+            }}
+            gap="xsmall"
+        >
+            <FormField label="First Name">
+                <TextInput value={firstName} onChange={setFirstName} disabled={disabled}/>
+            </FormField>
+            <FormField label="Last Name">
+                <TextInput value={lastName} onChange={setLastName} disabled={disabled}/>
+            </FormField>
+        </Grid>
+    );
+}
+
+const StepsElement = ({
+                          index,
+                          text,
+                          setText,
+                          onDelete,
+                          disabled
+                      }: { index: number, text: string, setText: ((event: React.ChangeEvent<HTMLTextAreaElement>) => void), onDelete: React.MouseEventHandler<HTMLButtonElement>, disabled: boolean }) => {
+    return (
+        <Grid
+            columns={["xsmall", "auto", "auto"]}
+            rows={["auto"]}
+            areas={[["index", "text", "delete"]]}
+            gap="xsmall"
+            margin="xsmall"
+        >
+            <Box gridArea="index">
+                <Text weight="bold">{index + 1}.</Text>
+            </Box>
+            <Box gridArea="text">
+                <TextArea value={text} onChange={setText} disabled={disabled}/>
+            </Box>
+            {!disabled && <Box gridArea="delete">
+                <Button icon={<Close/>} onClick={onDelete} secondary/>
+            </Box>}
+        </Grid>
+    );
+}
 
 export const RecipeModal = () => {
     const [disabled, setDisabled] = useState<boolean>(true);
     const setSelectedRecipe = useSetRecoilState(selectedRecipeState);
     const selectedRecipeValue = useRecoilValue(getSelectedRecipeSelector);
+    //Recipe values
+    const [recipe, setRecipe] = useState<Recipe>(selectedRecipeValue!);
+    //Change handlers
+    const onIngredientChange = (index: number, key: string, value: any) => {
+        console.log(`Changing ingredient key ${key} with index ${index} with value ${value}`);
+        const newIngredientList = recipe.ingredients.map((x, i) => {
+            if (i === index) {
+                if (key === 'unit') {
+                    return {
+                        ...x,
+                        'unit': value['value']
+                    };
+                }
+                return {
+                    ...x,
+                    [key]: value
+                };
+            }
+            return x;
+        })
+        setRecipe({...recipe, ingredients: newIngredientList});
+    };
+
+    const onStepChange = (index: number, value: string) => {
+        const newStepList = recipe.steps.map((x, i) => {
+            if (i === index) {
+                return {
+                    ...x,
+                    description: value
+                };
+            }
+            return x;
+        });
+        setRecipe({...recipe, steps: newStepList});
+    };
+    //Add elements
+    const onAddIngredient = () => {
+        const newIngredientList: Ingredient[] = [
+            ...recipe.ingredients,
+            {
+                name: '',
+                amount: 0,
+                unit: 0
+            }
+        ];
+        setRecipe({...recipe, ingredients: newIngredientList})
+    };
+
+    const onAddStep = () => {
+        const nextIndex = Math.max(...recipe.steps.map(x => x.index)) + 1;
+        const newStepList: Step[] = [
+            ...recipe.steps,
+            {
+                index: nextIndex,
+                description: ''
+            }
+        ];
+        setRecipe({...recipe, steps: newStepList})
+    };
+    //Remove elements
+    const onRemoveIngredient = (index: number) => {
+        const newIngredientList = recipe.ingredients.filter((x, i) => i !== index);
+        setRecipe({...recipe, ingredients: newIngredientList});
+    };
+
+    const onRemoveStep = (index: number) => {
+        const newStepList = recipe.steps.filter((x, i) => i !== index);
+        setRecipe({...recipe, steps: newStepList});
+    }
     return (
         <Layer>
             <Box
@@ -86,42 +239,85 @@ export const RecipeModal = () => {
                 direction="row"
                 alignSelf="center"
                 pad="large"
-            > 
+            >
                 <Form>
                     <FormField label="Title" name="title">
-                        <TextInput value={selectedRecipeValue!.title} disabled={disabled}/>
+                        <TextInput value={recipe!.title}
+                                   onChange={event => setRecipe({...recipe, title: event.target.value})}
+                                   disabled={disabled}/>
                     </FormField>
                     <FormField label="Rating" name="rating">
                         <ThemeContext.Extend
                             value={radioButtonTheme}
                         >
                             <RadioButtonGroup
-                            name="rating-radio"
-                            value={selectedRecipeValue!.rating}
-                            direction="row"
-                            disabled={disabled}
-                            options={[
-                                {label: '1', value: 1},
-                                {label: '2', value: 2},
-                                {label: '3', value: 3},
-                                {label: '4', value: 4},
-                                {label: '5', value: 5},
-                            ]}/>
+                                name="rating-radio"
+                                value={recipe!.rating}
+                                onChange={(event: any) => setRecipe({...recipe, rating: event.target.value})}
+                                direction="row"
+                                disabled={disabled}
+                                options={[
+                                    {label: '1', value: 1},
+                                    {label: '2', value: 2},
+                                    {label: '3', value: 3},
+                                    {label: '4', value: 4},
+                                    {label: '5', value: 5},
+                                ]}/>
                         </ThemeContext.Extend>
                     </FormField>
-                    
+
+                    <AuthorElement firstName={recipe!.author.firstName}
+                                   setFirstName={event => setRecipe({
+                                       ...recipe,
+                                       author: {...recipe.author, firstName: event.target.value}
+                                   })}
+                                   lastName={recipe!.author.lastName}
+                                   setLastName={event => setRecipe({
+                                       ...recipe,
+                                       author: {...recipe.author, lastName: event.target.value}
+                                   })}
+                                   disabled={disabled}
+                    />
+
                     <FormField label="Ingredients" name="ingredients">
-                        {selectedRecipeValue!.ingredients.map((x, i) => 
-                            <IngredientElement key={`ingredient-${i}`} value={x.name} amount={x.amount!} unit={x.unit} disabled={disabled}/>
-                            )}
+                        {recipe!.ingredients.map((x, i) =>
+                            <IngredientElement
+                                key={`ingredient-${i}`}
+                                value={x.name}
+                                setValue={event => onIngredientChange(i, 'name', event.target.value)}
+                                amount={x.amount!}
+                                setAmount={event => onIngredientChange(i, 'amount', event.target.value.replace(/\D/,''))}
+                                unit={x.unit}
+                                setUnit={event => onIngredientChange(i, 'unit', event)}
+                                onDelete={() => onRemoveIngredient(i)}
+                                disabled={disabled}
+                            />
+                        )}
                     </FormField>
-                    
-                    <Box direction="row">
-                        <Button primary label="Edit"/>
+
+                    {!disabled && <Box>
+                        <Button icon={<Add/>} label="Add Ingredient" onClick={onAddIngredient} alignSelf="end"
+                                secondary/>
+                    </Box>}
+
+                    <FormField label="Steps" name="steps">
+                        {recipe!.steps.map((x, i) =>
+                            <StepsElement key={`steps-${x.index}`} index={x.index} text={x.description}
+                                          setText={event => onStepChange(i, event.target.value)} onDelete={() => onRemoveStep(i)} disabled={disabled}/>
+                        )}
+                    </FormField>
+
+                    {!disabled && <Box>
+                        <Button icon={<Add/>} label="Add Step" onClick={onAddStep} alignSelf="end"
+                                secondary/>
+                    </Box>}
+
+                    <Box direction="row" justify="center" gap="medium">
+                        <Button primary label={disabled ? 'Edit' : 'Save'} onClick={() => setDisabled(!disabled)}/>
                         <Button secondary label="Close" onClick={() => setSelectedRecipe(null)}/>
                     </Box>
                 </Form>
-            
+
             </Box>
         </Layer>
     );
