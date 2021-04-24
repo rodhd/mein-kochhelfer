@@ -6,6 +6,7 @@ import {useRecoilState} from "recoil";
 import {selectedRecipeState} from "../state/selectedRecipeState";
 import {recipesState} from "../state/recipesState";
 import {RecipeModal} from "../components/RecipeModal";
+import {SearchBar} from "../components/SearchBar";
 
 export function HomeView() {
     const [recipes, setRecipes] = useRecoilState(recipesState);
@@ -22,6 +23,7 @@ export function HomeView() {
     
     return(
         <Main align="center">
+            <SearchBar/>
             <Box justify="center">
                 <RecipeList />
             </Box>

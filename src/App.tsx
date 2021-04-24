@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {Grommet} from 'grommet'
 import {HomeView} from "./views/HomeView";
+import { grommet } from 'grommet/themes';
 
 const theme = {
     global: {
@@ -17,7 +18,7 @@ const theme = {
 
 function App() {
     return (
-        <Grommet theme={theme} full>
+        <Grommet theme={grommet} full>
             <HomeView/>
         </Grommet>
     );

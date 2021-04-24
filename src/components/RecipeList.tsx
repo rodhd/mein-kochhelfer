@@ -3,9 +3,10 @@ import {RecipeListItem} from "./RecipeListItem";
 import React from "react";
 import {useRecoilValue} from "recoil";
 import {recipesState} from "../state/recipesState";
+import {getFilteredRecipesSelector} from "../state/getFilteredRecipesSelector";
 
 export const RecipeList = () => {
-    const recipes = useRecoilValue(recipesState);
+    const recipes = useRecoilValue(getFilteredRecipesSelector);
 
     return (
         <Box fill direction="row">

@@ -13,11 +13,14 @@ import {
     ThemeContext
 } from "grommet";
 import React, {useState} from "react";
-import {useRecoilValue, useSetRecoilState} from "recoil";
+import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {getSelectedRecipeSelector} from "../state/getSelectedRecipeSelector";
 import {selectedRecipeState} from "../state/selectedRecipeState";
 import {Ingredient, Recipe, Step, Unit} from "../api/generated";
 import {Add, Close} from "grommet-icons";
+import {recipesClient} from "../api/clients";
+import {NotificationToast} from "./NotificationToast";
+import {recipesState} from "../state/recipesState";
 
 const radioButtonTheme = {
     radioButton: {
@@ -157,10 +160,14 @@ const StepsElement = ({
     );
 }
 
+
+
 export const RecipeModal = () => {
     const [disabled, setDisabled] = useState<boolean>(true);
+    const [showToast, setShowToast] = useState<boolean>(false);
     const setSelectedRecipe = useSetRecoilState(selectedRecipeState);
     const selectedRecipeValue = useRecoilValue(getSelectedRecipeSelector);
+    const [recipes, setRecipes] = useRecoilState(recipesState);
     //Recipe values
     const [recipe, setRecipe] = useState<Recipe>(selectedRecipeValue!);
     //Change handlers
@@ -227,18 +234,37 @@ export const RecipeModal = () => {
     };
 
     const onRemoveStep = (index: number) => {
-        const newStepList = recipe.steps.filter((x, i) => i !== index);
+        const newStepList = recipe.steps
+            .filter((x, i) => i !== index)
+            .map((x, i) => x = {...x, index: i});
         setRecipe({...recipe, steps: newStepList});
     }
+    
+    // API calls
+    
+    const saveRecipe = async () => {
+        const result = await recipesClient.updateRecipe(recipe.id, recipe);
+        const newRecipes = await recipesClient.getAllRecipes();
+        setShowToast(true);
+        setTimeout(() => {
+            setShowToast(false);
+            setDisabled(true);
+            setSelectedRecipe(null);
+            setRecipes(newRecipes);
+        }, 3000);
+    };
     return (
-        <Layer>
+        <Layer
+            position="center"
+        >
             <Box
-                align="center"
+                align="start"
                 justify="center"
                 gap="small"
                 direction="row"
                 alignSelf="center"
                 pad="large"
+                overflow="auto"
             >
                 <Form>
                     <FormField label="Title" name="title">
@@ -313,11 +339,16 @@ export const RecipeModal = () => {
                     </Box>}
 
                     <Box direction="row" justify="center" gap="medium">
-                        <Button primary label={disabled ? 'Edit' : 'Save'} onClick={() => setDisabled(!disabled)}/>
+                        {disabled ? 
+                            <Button primary label="Edit" onClick={() => setDisabled(!disabled)}/>
+                            : <Button primary label="Save" onClick={async () => await saveRecipe()}/>
+                        }
                         <Button secondary label="Close" onClick={() => setSelectedRecipe(null)}/>
                     </Box>
                 </Form>
-
+                {showToast && 
+                    <NotificationToast isWarning={false} text={"Recipe saved!"}/>
+                }
             </Box>
         </Layer>
     );
