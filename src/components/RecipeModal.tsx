@@ -12,7 +12,7 @@ import {
     TextInput,
     ThemeContext
 } from "grommet";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {getSelectedRecipeSelector} from "../state/getSelectedRecipeSelector";
 import {selectedRecipeState} from "../state/selectedRecipeState";
@@ -21,6 +21,7 @@ import {Add, Close} from "grommet-icons";
 import {recipesClient} from "../api/clients";
 import {NotificationToast} from "./NotificationToast";
 import {recipesState} from "../state/recipesState";
+import {createNewRecipeState} from "../state/createNewRecipeState";
 
 const radioButtonTheme = {
     radioButton: {
@@ -45,7 +46,18 @@ const units = [
     {label: 'Pounds', value: Unit.Pounds},
     {label: 'Tablespoons', value: Unit.Tablespoons},
     {label: 'Teaspoon', value: Unit.Teaspoons}
-]
+];
+
+const newRecipe: Recipe = {
+    author: {
+        firstName: '', 
+        lastName: ''}, 
+    id: "", 
+    ingredients: [], 
+    rating: 1, 
+    steps: [], 
+    title: ""
+};
 
 
 const IngredientElement = ({
@@ -161,15 +173,22 @@ const StepsElement = ({
 }
 
 
-
 export const RecipeModal = () => {
     const [disabled, setDisabled] = useState<boolean>(true);
     const [showToast, setShowToast] = useState<boolean>(false);
+
+    //Recoil state
     const setSelectedRecipe = useSetRecoilState(selectedRecipeState);
     const selectedRecipeValue = useRecoilValue(getSelectedRecipeSelector);
     const [recipes, setRecipes] = useRecoilState(recipesState);
+    const [createNewRecipe, setCreateNewRecipe] = useRecoilState(createNewRecipeState);
     //Recipe values
-    const [recipe, setRecipe] = useState<Recipe>(selectedRecipeValue!);
+    const [recipe, setRecipe] = useState<Recipe>(createNewRecipe ? newRecipe : selectedRecipeValue!);
+    useEffect(() => {
+        if (createNewRecipe) {
+            setDisabled(false);
+        }
+    })
     //Change handlers
     const onIngredientChange = (index: number, key: string, value: any) => {
         console.log(`Changing ingredient key ${key} with index ${index} with value ${value}`);
@@ -217,7 +236,7 @@ export const RecipeModal = () => {
     };
 
     const onAddStep = () => {
-        const nextIndex = Math.max(...recipe.steps.map(x => x.index)) + 1;
+        const nextIndex = Math.max(...recipe.steps.map(x => x.index), -1) + 1;
         const newStepList: Step[] = [
             ...recipe.steps,
             {
@@ -239,19 +258,36 @@ export const RecipeModal = () => {
             .map((x, i) => x = {...x, index: i});
         setRecipe({...recipe, steps: newStepList});
     }
-    
+
     // API calls
-    
+
     const saveRecipe = async () => {
-        const result = await recipesClient.updateRecipe(recipe.id, recipe);
+        if(createNewRecipe) {
+            await recipesClient.addRecipe({
+                author: recipe.author,
+                ingredients: recipe.ingredients,
+                rating: recipe.rating,
+                steps: recipe.steps,
+                title: recipe.title
+            });
+        }
+        else {
+            await recipesClient.updateRecipe(recipe.id, recipe);
+        }
         const newRecipes = await recipesClient.getAllRecipes();
         setShowToast(true);
         setTimeout(() => {
             setShowToast(false);
             setDisabled(true);
             setSelectedRecipe(null);
+            setCreateNewRecipe(false);
             setRecipes(newRecipes);
-        }, 3000);
+        }, 500);
+    };
+    
+    const onClose = () => {
+        setSelectedRecipe(null);
+        setCreateNewRecipe(false);
     };
     return (
         <Layer
@@ -279,7 +315,7 @@ export const RecipeModal = () => {
                             <RadioButtonGroup
                                 name="rating-radio"
                                 value={recipe!.rating}
-                                onChange={(event: any) => setRecipe({...recipe, rating: event.target.value})}
+                                onChange={(event: any) => setRecipe({...recipe, rating: parseInt(event.target.value)})}
                                 direction="row"
                                 disabled={disabled}
                                 options={[
@@ -312,7 +348,7 @@ export const RecipeModal = () => {
                                 value={x.name}
                                 setValue={event => onIngredientChange(i, 'name', event.target.value)}
                                 amount={x.amount!}
-                                setAmount={event => onIngredientChange(i, 'amount', event.target.value.replace(/\D/,''))}
+                                setAmount={event => onIngredientChange(i, 'amount', event.target.value.replace(/\D/, ''))}
                                 unit={x.unit}
                                 setUnit={event => onIngredientChange(i, 'unit', event)}
                                 onDelete={() => onRemoveIngredient(i)}
@@ -329,7 +365,8 @@ export const RecipeModal = () => {
                     <FormField label="Steps" name="steps">
                         {recipe!.steps.map((x, i) =>
                             <StepsElement key={`steps-${x.index}`} index={x.index} text={x.description}
-                                          setText={event => onStepChange(i, event.target.value)} onDelete={() => onRemoveStep(i)} disabled={disabled}/>
+                                          setText={event => onStepChange(i, event.target.value)}
+                                          onDelete={() => onRemoveStep(i)} disabled={disabled}/>
                         )}
                     </FormField>
 
@@ -339,15 +376,15 @@ export const RecipeModal = () => {
                     </Box>}
 
                     <Box direction="row" justify="center" gap="medium">
-                        {disabled ? 
+                        {disabled ?
                             <Button primary label="Edit" onClick={() => setDisabled(!disabled)}/>
                             : <Button primary label="Save" onClick={async () => await saveRecipe()}/>
                         }
-                        <Button secondary label="Close" onClick={() => setSelectedRecipe(null)}/>
+                        <Button secondary label="Close" onClick={onClose}/>
                     </Box>
                 </Form>
-                {showToast && 
-                    <NotificationToast isWarning={false} text={"Recipe saved!"}/>
+                {showToast &&
+                <NotificationToast isWarning={false} text={"Recipe saved!"}/>
                 }
             </Box>
         </Layer>

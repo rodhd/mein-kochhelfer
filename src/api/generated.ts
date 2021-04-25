@@ -163,7 +163,7 @@ export class RecipesClient {
         return Promise.resolve<Recipe>(<any>null);
     }
 
-    updateRecipe2(id: string | null): Promise<FileResponse | null> {
+    deleteRecipe(id: string | null): Promise<FileResponse | null> {
         let url_ = this.baseUrl + "/recipes/{id}";
         if (id === undefined || id === null)
             throw new Error("The parameter 'id' must be defined.");
@@ -178,11 +178,11 @@ export class RecipesClient {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processUpdateRecipe2(_response);
+            return this.processDeleteRecipe(_response);
         });
     }
 
-    protected processUpdateRecipe2(response: Response): Promise<FileResponse | null> {
+    protected processDeleteRecipe(response: Response): Promise<FileResponse | null> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200 || status === 206) {

@@ -1,9 +1,11 @@
 import {Box, Button, Text} from "grommet";
 import React from "react";
 import {Star} from "grommet-icons";
-import {useSetRecoilState} from "recoil";
+import {useRecoilState, useSetRecoilState} from "recoil";
 import {selectedRecipeState} from "../state/selectedRecipeState";
 import {Recipe} from "../api/generated";
+import {recipesClient} from "../api/clients";
+import {recipesState} from "../state/recipesState";
 
 const RatingStars = ({rating}: { rating: number }) => <Box direction={'row'}>
     {[...Array(rating)].map((el, i) => <Star key={i}/>)}
@@ -12,6 +14,12 @@ const RatingStars = ({rating}: { rating: number }) => <Box direction={'row'}>
 
 export const RecipeListItem = ({recipe}: {recipe: Recipe}) => {
     const setSelectedRecipe = useSetRecoilState(selectedRecipeState);
+    const [recipes, setRecipes] = useRecoilState(recipesState);
+    const onDelete = async () => {
+        await recipesClient.deleteRecipe(recipe.id)
+        const updatedRecipes = await recipesClient.getAllRecipes();
+        setRecipes(updatedRecipes);
+    }
     return (
         <tr>
             <td>
@@ -39,7 +47,7 @@ export const RecipeListItem = ({recipe}: {recipe: Recipe}) => {
             </td>
             
             <td>
-                <Button secondary label="Delete"/>
+                <Button secondary label="Delete" onClick={onDelete} />
             </td>
         </tr>
         
