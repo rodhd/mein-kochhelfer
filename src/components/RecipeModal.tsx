@@ -22,6 +22,11 @@ import {recipesClient} from "../api/clients";
 import {NotificationToast} from "./NotificationToast";
 import {recipesState} from "../state/recipesState";
 import {createNewRecipeState} from "../state/createNewRecipeState";
+import {newRecipe} from "../helpers/constants/newRecipe";
+import {units} from "../helpers/constants/units"
+import {IngredientElement} from "./IngredientElement";
+import {AuthorElement} from "./AuthorElement";
+import {StepsElement} from "./StepsElement";
 
 const radioButtonTheme = {
     radioButton: {
@@ -36,142 +41,7 @@ const radioButtonTheme = {
             marginLeft: 5
         }
     }
-}
-
-const units = [
-    {label: 'Grams', value: Unit.Grams},
-    {label: 'Cups', value: Unit.Cups},
-    {label: 'Liters', value: Unit.Liters},
-    {label: 'Ounces', value: Unit.Ounces},
-    {label: 'Pounds', value: Unit.Pounds},
-    {label: 'Tablespoons', value: Unit.Tablespoons},
-    {label: 'Teaspoon', value: Unit.Teaspoons}
-];
-
-const newRecipe: Recipe = {
-    author: {
-        firstName: '', 
-        lastName: ''}, 
-    id: "", 
-    ingredients: [], 
-    rating: 1, 
-    steps: [], 
-    title: ""
 };
-
-
-const IngredientElement = ({
-                               value,
-                               setValue,
-                               amount,
-                               setAmount,
-                               unit,
-                               setUnit,
-                               onDelete,
-                               disabled
-                           }: {
-    value: string,
-    setValue: ((event: React.ChangeEvent<HTMLInputElement>) => void),
-    amount: number,
-    setAmount: ((event: React.ChangeEvent<HTMLInputElement>) => void)
-    unit: any,
-    setUnit: ((event: React.ChangeEvent<HTMLSelectElement>) => void),
-    onDelete: React.MouseEventHandler<HTMLButtonElement>,
-    disabled: boolean
-}) => {
-    return (
-        <Grid
-            columns={['2/4', 'auto', 'auto', 'auto']}
-            rows={['auto']}
-            areas={[['name', 'amount', 'unit', 'delete']]}
-            gap="xsmall"
-            margin="xsmall"
-        >
-            <Box gridArea="name">
-                <TextInput placeholder="Name" onChange={setValue} value={value} disabled={disabled}/>
-            </Box>
-            <Box gridArea="amount">
-                <TextInput placeholder="Amount" onChange={setAmount} value={amount} disabled={disabled}/>
-            </Box>
-            <Box gridArea="unit">
-                <Select
-                    placeholder="Unit"
-                    labelKey="label"
-                    valueKey={{key: "value", reduce: true}}
-                    value={unit}
-                    onChange={setUnit}
-                    options={units}
-                    disabled={disabled}
-                />
-            </Box>
-            {!disabled && <Box gridArea="delete">
-                <Button icon={<Close/>} onClick={onDelete} secondary/>
-            </Box>}
-        </Grid>
-
-    );
-}
-
-
-const AuthorElement = ({
-                           firstName,
-                           setFirstName,
-                           lastName,
-                           setLastName,
-                           disabled
-                       }: {
-    firstName: string,
-    setFirstName: ((event: React.ChangeEvent<HTMLInputElement>) => void),
-    lastName: string,
-    setLastName: ((event: React.ChangeEvent<HTMLInputElement>) => void),
-    disabled: boolean
-}) => {
-    return (
-        <Grid
-            columns={{
-                count: 2,
-                size: 'auto',
-            }}
-            gap="xsmall"
-        >
-            <FormField label="First Name">
-                <TextInput value={firstName} onChange={setFirstName} disabled={disabled}/>
-            </FormField>
-            <FormField label="Last Name">
-                <TextInput value={lastName} onChange={setLastName} disabled={disabled}/>
-            </FormField>
-        </Grid>
-    );
-}
-
-const StepsElement = ({
-                          index,
-                          text,
-                          setText,
-                          onDelete,
-                          disabled
-                      }: { index: number, text: string, setText: ((event: React.ChangeEvent<HTMLTextAreaElement>) => void), onDelete: React.MouseEventHandler<HTMLButtonElement>, disabled: boolean }) => {
-    return (
-        <Grid
-            columns={["xsmall", "auto", "auto"]}
-            rows={["auto"]}
-            areas={[["index", "text", "delete"]]}
-            gap="xsmall"
-            margin="xsmall"
-        >
-            <Box gridArea="index">
-                <Text weight="bold">{index + 1}.</Text>
-            </Box>
-            <Box gridArea="text">
-                <TextArea value={text} onChange={setText} disabled={disabled}/>
-            </Box>
-            {!disabled && <Box gridArea="delete">
-                <Button icon={<Close/>} onClick={onDelete} secondary/>
-            </Box>}
-        </Grid>
-    );
-}
-
 
 export const RecipeModal = () => {
     const [disabled, setDisabled] = useState<boolean>(true);
@@ -182,13 +52,15 @@ export const RecipeModal = () => {
     const selectedRecipeValue = useRecoilValue(getSelectedRecipeSelector);
     const [recipes, setRecipes] = useRecoilState(recipesState);
     const [createNewRecipe, setCreateNewRecipe] = useRecoilState(createNewRecipeState);
+    
     //Recipe values
     const [recipe, setRecipe] = useState<Recipe>(createNewRecipe ? newRecipe : selectedRecipeValue!);
     useEffect(() => {
         if (createNewRecipe) {
             setDisabled(false);
         }
-    })
+    });
+    
     //Change handlers
     const onIngredientChange = (index: number, key: string, value: any) => {
         console.log(`Changing ingredient key ${key} with index ${index} with value ${value}`);
@@ -222,6 +94,7 @@ export const RecipeModal = () => {
         });
         setRecipe({...recipe, steps: newStepList});
     };
+    
     //Add elements
     const onAddIngredient = () => {
         const newIngredientList: Ingredient[] = [
@@ -246,6 +119,7 @@ export const RecipeModal = () => {
         ];
         setRecipe({...recipe, steps: newStepList})
     };
+    
     //Remove elements
     const onRemoveIngredient = (index: number) => {
         const newIngredientList = recipe.ingredients.filter((x, i) => i !== index);
