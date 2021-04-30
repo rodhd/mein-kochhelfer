@@ -1,4 +1,4 @@
-import {Box, Button, Grid, Text} from "grommet";
+import {Box, Button, Grid, Text, Tip} from "grommet";
 import React from "react";
 import {Basket, Cafeteria, Star, Task, Trash, User, View} from "grommet-icons";
 import {useRecoilState, useSetRecoilState} from "recoil";
@@ -22,23 +22,26 @@ export const RecipeListItem = ({recipe}: { recipe: Recipe }) => {
     }
     return (
         <Box
-            direction="row-responsive"
+            direction="row"
             pad="medium"
             align="start"
+            fill
             round
             background={{color: 'light-2', opacity: 'strong'}}
             border={true}
         >
             <Grid
-                rows={['auto']}
-                columns={['small', 'small', 'flex', 'flex', 'medium', 'flex', 'flex']}
+                rows={['full']}
+                columns={['30%', '21%', '7%', '7%', '15%', '5%', '5%']}
                 areas={[['title', 'rating', 'ingredients', 'steps', 'author', 'view', 'delete']]}
                 gap="small"
+                fill
             >
                 <Box
                     pad="small"
                     direction="row"
                     gridArea="title"
+                    fill={true}
                 >
                     <Cafeteria/>
                     <Text>{recipe.title}</Text>
@@ -47,6 +50,7 @@ export const RecipeListItem = ({recipe}: { recipe: Recipe }) => {
                 <Box
                     pad="small"
                     gridArea="rating"
+                    fill
                 >
                     <RatingStars rating={recipe.rating}/>
                 </Box>
@@ -58,6 +62,7 @@ export const RecipeListItem = ({recipe}: { recipe: Recipe }) => {
                     gap="xsmall"
                     background={{color: 'accent-1', opacity: 'strong'}}
                     gridArea="ingredients"
+                    fill
                 >
                     <Basket/>
                     <Text>{recipe.ingredients.length}</Text>
@@ -71,6 +76,8 @@ export const RecipeListItem = ({recipe}: { recipe: Recipe }) => {
                     round={true}
                     background={{color: 'accent-2', opacity: 'strong'}}
                     gridArea="steps"
+                    a11yTitle="No. of steps"
+                    fill
                 >
                     <Task/>
                     <Text>{recipe.steps.length}</Text>
@@ -81,18 +88,24 @@ export const RecipeListItem = ({recipe}: { recipe: Recipe }) => {
                     align="center"
                     direction="row"
                     gridArea="author"
+                    fill
                 >
                     <User/>
                     <Text>{recipe.author.firstName} {recipe.author.lastName}</Text>
                 </Box>
 
-                <Box gridArea="view" align="center">
-                    <Button primary icon={<View/>} onClick={() => setSelectedRecipe(recipe.id)}/>
+                <Box gridArea="view" align="center" fill>
+                    <Tip content="View">
+                        <Button primary icon={<View/>} onClick={() => setSelectedRecipe(recipe.id)}/>
+                    </Tip>
                 </Box>
 
-                <Box gridArea="delete" align="center">
-                    <Button secondary icon={<Trash/>} onClick={onDelete}/>
-                </Box></Grid>
+                <Box gridArea="delete" align="center" fill>
+                    <Tip content="Delete">
+                        <Button secondary icon={<Trash/>} onClick={onDelete}/>
+                    </Tip>
+                </Box>
+            </Grid>
         </Box>
     );
 }
