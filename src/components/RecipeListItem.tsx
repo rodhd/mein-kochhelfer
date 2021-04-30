@@ -1,6 +1,6 @@
 import {Box, Button, Text} from "grommet";
 import React from "react";
-import {Star} from "grommet-icons";
+import {Star, Trash, View} from "grommet-icons";
 import {useRecoilState, useSetRecoilState} from "recoil";
 import {selectedRecipeState} from "../state/selectedRecipeState";
 import {Recipe} from "../api/generated";
@@ -43,29 +43,12 @@ export const RecipeListItem = ({recipe}: {recipe: Recipe}) => {
             </td>
 
             <td>
-                <Button primary label="View/Edit" onClick={() => setSelectedRecipe(recipe.id)}/>
+                <Button primary icon={<View />} onClick={() => setSelectedRecipe(recipe.id)}/>
             </td>
             
             <td>
-                <Button secondary label="Delete" onClick={onDelete} />
+                <Button secondary icon={<Trash />} onClick={onDelete} />
             </td>
         </tr>
-        
-        /*<Card
-            background={'light-1'} 
-            margin={{horizontal: 'large'}}
-        >
-            <CardBody pad={'small'}>
-                <Heading level={3}>
-                    {recipe.title}
-                </Heading>
-                <Box direction={'row'} align={'center'} gap={'small'} flex>
-                    <RecipeImage src={recipe.photoUrl ?? ''}/>
-                    <RatingStars rating={recipe.rating}/>
-                </Box>
-            </CardBody>
-            <CardFooter background={'light-2'}
-                        pad={'small'}><Text>Author: {recipe.author.firstName} {recipe.author.lastName}</Text></CardFooter>
-        </Card>*/
     );
 }

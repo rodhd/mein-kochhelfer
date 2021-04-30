@@ -36,11 +36,6 @@ export const RecipeList = () => {
                     )}
                 </tbody>
             </table>
-            {/*<Box direction={'column'} gap={'small'}>
-                {recipes !== null && recipes.map((x) =>
-                    <RecipeListItem key={x.id} recipe={x}/>
-                )}
-            </Box>*/}
         </Box>
     );
 }
