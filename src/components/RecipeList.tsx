@@ -9,7 +9,7 @@ export const RecipeList = () => {
     const recipes = useRecoilValue(getFilteredRecipesSelector);
 
     return (
-        <Box fill gap="medium" pad="medium">
+        <Box fill gap="medium" pad="medium"  width={{"min": "1000px", "max": "60%"}}>
             {recipes !== null && recipes.map((x) =>
                 <RecipeListItem key={x.id} recipe={x}/>
             )}

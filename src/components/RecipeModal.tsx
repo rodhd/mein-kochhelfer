@@ -3,12 +3,8 @@ import {
     Button,
     Form,
     FormField,
-    Grid,
     Layer,
     RadioButtonGroup,
-    Select,
-    Text,
-    TextArea,
     TextInput,
     ThemeContext
 } from "grommet";
@@ -23,7 +19,6 @@ import {NotificationToast} from "./NotificationToast";
 import {recipesState} from "../state/recipesState";
 import {createNewRecipeState} from "../state/createNewRecipeState";
 import {newRecipe} from "../helpers/constants/newRecipe";
-import {units} from "../helpers/constants/units"
 import {IngredientElement} from "./IngredientElement";
 import {AuthorElement} from "./AuthorElement";
 import {StepsElement} from "./StepsElement";

@@ -25,6 +25,7 @@ export const RecipeListItem = ({recipe}: { recipe: Recipe }) => {
             direction="row"
             pad="medium"
             align="start"
+            justify="center"
             fill
             round
             background={{color: 'light-2', opacity: 'strong'}}
@@ -41,10 +42,11 @@ export const RecipeListItem = ({recipe}: { recipe: Recipe }) => {
                     pad="small"
                     direction="row"
                     gridArea="title"
+                    gap="small"
                     fill={true}
                 >
                     <Cafeteria/>
-                    <Text>{recipe.title}</Text>
+                    <Text size="xlarge">{recipe.title}</Text>
                 </Box>
 
                 <Box
@@ -58,6 +60,7 @@ export const RecipeListItem = ({recipe}: { recipe: Recipe }) => {
                 <Box
                     pad="small"
                     direction="row"
+                    align="center"
                     round={true}
                     gap="xsmall"
                     background={{color: 'accent-1', opacity: 'strong'}}
@@ -86,6 +89,7 @@ export const RecipeListItem = ({recipe}: { recipe: Recipe }) => {
                 <Box
                     pad="small"
                     align="center"
+                    gap="small"
                     direction="row"
                     gridArea="author"
                     fill

@@ -13,6 +13,7 @@ export const SearchBar = () => {
             direction="row"
             justify="center"
             gap="small"
+            pad="medium"
             width={{"max": "600px"}}
             fill="horizontal"
         >
